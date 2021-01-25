@@ -22,9 +22,13 @@ def DPOA(ins: i.Instance, pred:i.Predictor, w):
 # assuming delta T = 1
 def RPOA(ins: i.Instance, pred:i.Predictor, w):
     pred.w = w
-    gamma_vals = np.arange((1-w)*ins.B + 1)
-    dis = [np.exp(g/(ins.B * (1-w)))/(ins.B *(1-w)) for g in gamma_vals]
+
+    upper = (1-w)*ins.B
+    gamma_vals = np.arange(upper + 1)
+    dis = [np.exp(g/upper)/((np.exp(1)-1) * upper) for g in gamma_vals]
+    # return dis
     # to obtain probability distribution
+    # return dis
     dis = dis/sum(dis)
     for t in np.arange(ins.D):
         # print("t = ", t)

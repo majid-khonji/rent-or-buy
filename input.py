@@ -27,3 +27,15 @@ class PerfectPredictor(Predictor):
 
 
 
+class NoisyPredictor(Predictor):
+    def __init__(self, ins:Instance, w = None, std = 25):
+        self.ins = ins
+        self.w = w if w!= None else None
+        self.std = std
+    def predict(self, t):
+        noisy_D  = np.random.normal(loc = self.ins.D, scale = self.std)
+        # print("noisy D: ", noisy_D)
+        if t <= noisy_D <= t + self.w * self.ins.B:
+            return self.ins.D
+        else:
+            return None
