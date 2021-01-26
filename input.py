@@ -35,7 +35,8 @@ class NoisyPredictor(Predictor):
     def predict(self, t):
         noisy_D  = np.random.normal(loc = self.ins.D, scale = self.std)
         # print("noisy D: ", noisy_D)
-        if t <= noisy_D <= t + self.w * self.ins.B:
+        if t <= noisy_D <= t + self.w\
+                * self.ins.B:
             return self.ins.D
         else:
             return None
