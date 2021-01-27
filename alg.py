@@ -57,7 +57,7 @@ def OPT(ins: i.Instance):
 
 
 # W: number of samples for w
-def OLPA(m_ins: i.MultiInstance, e=0.25, alg=DPOA, W=100):
+def OLPA(m_ins: i.MultiInstance, e=0.25, alg=DPOA, W=10):
     K = m_ins.K
     R = np.zeros(shape=(K+1,W))
     w_vals = np.linspace(0, 1, W)
