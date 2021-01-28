@@ -62,19 +62,24 @@ def OLPA(m_ins: i.MultiInstance, e=0.25, alg=DPOA, W=10):
     R = np.zeros(shape=(K+1,W))
     w_vals = np.linspace(0, 1, W)
     windows = [] # output windows
-    sol = 0
+    total = 0
     for k in np.arange(1, K+1):
-        dis = [np.exp(-e/(8*m_ins.B**2) * R[k-1, w] ) for w in np.arange(W)]
+        if m_ins.normalize:
+            dis = [np.exp(-e/(8*(m_ins.B/m_ins.norm_factor)**2) * R[k-1, w] ) for w in np.arange(W)]
+        else:
+            dis = [np.exp(-e/(8*m_ins.B**2) * R[k-1, w] ) for w in np.arange(W)]
         dis = dis/sum(dis)
         w = np.random.choice(np.arange(W), 1,p= dis)
-        sol = sol + alg(m_ins.ins[k], w_vals[w])
+        sol = alg(m_ins.ins[k], w_vals[w]) if not m_ins.normalize else alg(m_ins.ins[k], w_vals[w])/m_ins.norm_factor
+        total += sol
 
         windows.append(w_vals[w])
 
         for w in np.arange(W):
-            R[k,w] = R[k-1,w] + alg(m_ins.ins[k], w_vals[w])
+            alg_sol = alg(m_ins.ins[k], w_vals[w]) if not m_ins.normalize else alg(m_ins.ins[k], w_vals[w])/m_ins.norm_factor
+            R[k,w] = R[k-1,w] + alg_sol
 
 
     sol_min_w = np.min(R[K,:])
-    return sol/K, sol_min_w/K
+    return total/K, sol_min_w/K
 
