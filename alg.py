@@ -83,3 +83,43 @@ def OLPA(m_ins: i.MultiInstance, e=0.25, alg=DPOA, W=10):
     sol_min_w = np.min(R[K,:])
     return total/K, sol_min_w/K
 
+# W: number of samples for w
+def MOLPA(ins: i.MultiPredictInstance, e=0.25, alg=DPOA, W=10):
+    K = ins.K
+    S = ins.S
+
+
+    w_vals = np.linspace(0, 1, W)
+    windows = [] # output windows
+    preds = [] # predictors
+    R = np.zeros(shape=(K+1,W, S))
+    sols = np.zeros(shape=(K+1,W, S))
+
+    norm_factor = ins.norm_factor if ins.normalize else 1
+
+    total = 0
+
+    rho = 0
+    for s in np.arange(S):
+        for k in np.arange(1, K+1):
+            for w in np.arange(W):
+                sols[k,w,s] = alg(ins.ins[k,s], w_vals[w])/norm_factor # if not ins.normalize else alg(ins.ins[k,s], w_vals[w]) / ins.norm_factor
+                R[k, w] = R[k - 1, w, s] + sols[k,w,s]
+                rho = sols[k,w,s]/(ins.B/norm_factor) if sols[k,w,s]/(ins.B/norm_factor) > rho else rho
+
+    keys = [(w,s) for w in np.arange(W) for s in np.arange(S)]
+    for k in np.arange(1, K+1):
+        dis = [np.exp(-e / (2 * rho**2  * (ins.B / norm_factor) ** 2) * R[k - 1, w, s]) for w in np.arange(W) for s in np.arange(S)]
+        dis = dis/sum(dis)
+        rand = np.random.choice(np.arange(W*S), 1,p= dis)
+        rand = np.int(rand)
+        w,s = keys[rand]
+        # print("w = %d, s=%d"%(w,s))
+        sol = sols[k,w,s]
+        total += sol
+
+        windows.append(w_vals[w])
+        preds.append(s)
+
+    sol_min = np.min(R[K,:,:])
+    return total/K, sol_min/K
