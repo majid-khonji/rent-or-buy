@@ -5,20 +5,29 @@ class Instance:
     B = 50 # price to buy
     noisy_D = 0 # read by the predictor
     w = 0 # predictor window
-    def __init__(self, w=0.1, B=50, predictor_std = 0, D_dependant = False):
+    time_dependant = False
+    predictor_std = 0
+    def __init__(self, w=0.1, B=50, predictor_std = 0, time_dependant = False):
         self.D = np.random.randint(1, self.T)
         self.B = B
         self.w = w
-        if predictor_std != 0:
-            noisy_D = int(np.random.normal(loc=self.D, scale=predictor_std))
-            self.noisy_D =  max(0, noisy_D)
-        else:
-            self.noisy_D = self.D
+        self.time_dependant = time_dependant
+        self.predictor_std = predictor_std
+        self.time_dependant = time_dependant
 
     def needed(self, t):
         return t < self.D
 
     def predict(self, t):
+        if self.predictor_std != 0 and not self.time_dependant:
+            noisy_D = int(np.random.normal(loc=self.D, scale=self.predictor_std))
+            self.noisy_D =  max(0, noisy_D)
+        elif self.time_dependant:
+            noisy_D = int(np.random.normal(loc=self.D, scale=self.D - t))
+            self.noisy_D = max(0, noisy_D)
+        else:
+            self.noisy_D = self.D
+        # add prediction randomness here
         if t <= self.noisy_D <= t + self.w * self.B:  # >= self.ins.B:
             return self.noisy_D
         else:
