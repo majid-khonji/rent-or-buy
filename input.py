@@ -15,19 +15,24 @@ class Instance:
         self.predictor_std = predictor_std
         self.time_dependant = time_dependant
 
-        self.predict(0) # needed for google algorithm with
+        if predictor_std == 0:
+            self.noisy_D = self.D
+        else:
+            noisy_D = int(np.random.normal(loc=self.D, scale=self.predictor_std))
+            self.noisy_D =  max(0, noisy_D)
+
 
 
     def needed(self, t):
         return t < self.D
 
     def predict(self, t):
-        noisy_D = -1
         if self.predictor_std != 0 and not self.time_dependant:
             noisy_D = int(np.random.normal(loc=self.D, scale=self.predictor_std))
             noisy_D =  max(0, noisy_D)
         elif self.time_dependant:
-            noisy_D = int(np.random.normal(loc=self.D, scale=self.D - t))
+            # print("std ", self.predictor_std*(self.D - t)/self.D)
+            noisy_D = int(np.random.normal(loc=self.D, scale= self.predictor_std*(self.D - t)/self.D))
             noisy_D = max(0, noisy_D)
         else:
             noisy_D = self.D
