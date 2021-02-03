@@ -4,9 +4,8 @@ class Instance:
     D = None # resource duration
     B = 50 # price to buy
     noisy_D = 0 # read by the predictor
-    w = 0 # predictor window
     time_dependant = False
-    predictor_std = 0
+    predictor_std = 0 # stores initial predictor std
     def __init__(self, w=0.1, B=50, predictor_std = 0, time_dependant = False):
         self.D = np.random.randint(1, self.T)
         self.B = B
@@ -53,12 +52,17 @@ class MultiInstance:
 
     # K: overrides the upper bound of k in theorem 3, None will take the default value
     # normalize: used to devide sol values by norm_factor
-    def __init__(self, K=10, w=0.1, B=50,  predictor_std=0, normalize = True):
+    def __init__(self, K=10, B=50,  predictor_std=0, normalize = True, k_dependant = False, time_dependant = False):
         self.B = B
-        self.w = w
         self.normalize = normalize
         self.K = K
-        self.ins = [Instance(w=w,B=self.B, predictor_std=predictor_std) for _ in np.arange(self.K + 1)]
+        if k_dependant:
+            self.ins = [Instance(B=self.B, predictor_std=predictor_std*(K-k)/K, time_dependant=time_dependant) for k in np.arange(self.K + 1)]
+        else:
+            self.ins = [Instance(B=self.B, predictor_std=predictor_std, time_dependant=time_dependant) for _ in np.arange(self.K + 1)]
+    def to_t_dependant(self):
+        for k in range(self.K + 1):
+            self.ins[k].time_dependant = True
 
 
 class MultiPredictInstance:
