@@ -6,12 +6,15 @@ class Instance:
     noisy_D = 0 # read by the predictor
     time_dependant = False
     predictor_std = 0 # stores initial predictor std
-    def __init__(self, w=0.1, B=50, predictor_std = 0, time_dependant = False):
+
+    # time_dependant: for time-diminishing setting
+    # D_dependant set std = std * D/T
+    def __init__(self, w=0.1, B=50, predictor_std = 0, time_dependant = False, D_dependant = False):
         self.D = np.random.randint(1, self.T)
         self.B = B
         self.w = w
         self.time_dependant = time_dependant
-        self.predictor_std = predictor_std
+        self.predictor_std = predictor_std * self.D/self.T if D_dependant else predictor_std
         self.time_dependant = time_dependant
 
         if predictor_std == 0:
