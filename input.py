@@ -7,26 +7,28 @@ class Instance:
     time_dependant = False
     predictor_std = 0 # stores initial predictor std
 
+    time_dim_func = 0 # linear | 1/x
+    dist = "g" # g: for gauissan, p: for poisson,  the distribution of noise
     # time_dependant: for time-diminishing setting
     # D_dependant set std = std * D/T
-    def __init__(self, w=0.1, B=50, predictor_std = 0, time_dependant = False, D_dependant = False):
+    def __init__(self, w=0.1, B=50, predictor_std = 0, time_dependant = False, D_dependant = False, time_dim_func = "linear", dist="g"):
         self.D = np.random.randint(1, self.T)
         self.B = B
         self.w = w
         self.time_dependant = time_dependant
         self.predictor_std = predictor_std * self.D/self.T if D_dependant else predictor_std
         self.time_dependant = time_dependant
-
+        self.time_dim_func = time_dim_func
+        self.dist = dist
         if predictor_std == 0:
             self.noisy_D = self.D
-        else:
-            noisy_D = int(np.random.normal(loc=self.D, scale=self.predictor_std))
-            self.noisy_D =  max(0, noisy_D)
+        else: # an initial prediction used by Google's algorithm
+            if dist == "g":
+                noisy_D = int(np.random.normal(loc=self.D, scale=self.predictor_std))
+                self.noisy_D = max(0, noisy_D)
+            elif dist == "p":
+                self.noisy_D = int(np.random.exponential(self.D))
 
-
-
-    def needed(self, t):
-        return t < self.D
 
     def predict(self, t):
         if self.predictor_std != 0 and not self.time_dependant:
@@ -34,8 +36,15 @@ class Instance:
             noisy_D =  max(0, noisy_D)
         elif self.time_dependant:
             # print("std ", self.predictor_std*(self.D - t)/self.D)
-            noisy_D = int(np.random.normal(loc=self.D, scale= self.predictor_std*(self.D - t)/self.D))
-            noisy_D = max(0, noisy_D)
+            if self.dist == "g":
+                scale = 0
+                if self.time_dim_func == "linear":
+                    scale = self.predictor_std*(self.D - t)/self.D
+                elif self.time_dim_func == "1/x":
+                    scale = self.predictor_std*(1/(t+1))
+                noisy_D = max(0, int(np.random.normal(loc=self.D, scale= scale)) )
+            elif self.dist == "p":
+                noisy_D = t + int(np.random.exponential(self.D-t))
         else:
             noisy_D = self.D
         # add prediction randomness here
