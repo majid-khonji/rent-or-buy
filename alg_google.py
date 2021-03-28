@@ -5,6 +5,8 @@ import input as i
 def DPOA_google(ins: i.Instance, w):
     ins.w = w
     _lambda = 1 - w
+    if _lambda == 0:
+        _lambda = 0.00000000000001
     D_ = ins.noisy_D
     if D_ >= ins.B:
         if ins.D < math.ceil(ins.B * _lambda):

@@ -42,6 +42,8 @@ class Instance:
                     scale = self.predictor_std*(self.D - t)/self.D
                 elif self.time_dim_func == "1/x":
                     scale = self.predictor_std*(1/(t+1))
+                elif self.time_dim_func == "1/x^2":
+                    scale = self.predictor_std*(1/(t+1)**2)
                 noisy_D = max(0, int(np.random.normal(loc=self.D, scale= scale)) )
             elif self.dist == "p":
                 noisy_D = t + int(np.random.exponential(self.D-t))
@@ -64,14 +66,14 @@ class MultiInstance:
 
     # K: overrides the upper bound of k in theorem 3, None will take the default value
     # normalize: used to devide sol values by norm_factor
-    def __init__(self, K=10, B=50,  predictor_std=0, normalize = True, k_dependant = False, time_dependant = False):
+    def __init__(self, K=10, B=50,  predictor_std=0, normalize = True, k_dependant = False, time_dependant = False, time_dim_func = "linear"):
         self.B = B
         self.normalize = normalize
         self.K = K
         if k_dependant:
-            self.ins = [Instance(B=self.B, predictor_std=predictor_std*(K-k)/K, time_dependant=time_dependant) for k in np.arange(self.K + 1)]
+            self.ins = [Instance(B=self.B, predictor_std=predictor_std*(K-k)/K, time_dependant=time_dependant, time_dim_func=time_dim_func) for k in np.arange(self.K + 1)]
         else:
-            self.ins = [Instance(B=self.B, predictor_std=predictor_std, time_dependant=time_dependant) for _ in np.arange(self.K + 1)]
+            self.ins = [Instance(B=self.B, predictor_std=predictor_std, time_dependant=time_dependant, time_dim_func=time_dim_func) for _ in np.arange(self.K + 1)]
     def to_t_dependant(self):
         for k in range(self.K + 1):
             self.ins[k].time_dependant = True
@@ -88,15 +90,18 @@ class MultiPredictInstance:
     w = 0.1
 
     # K: overrides the upper bound of k in theorem 3, None will take the default value
-    def __init__(self,S=5, K=10, w=0.1, B=50, predictor_std_range=[0,100], normalize = True):
+    def __init__(self,S=5, K=10, B=50, predictor_std_range=[0,100], k_dependant = False, time_dependant=False, normalize = True, time_dim_func = "linear"):
         self.B = B
         self.S = S
         self.K = K
         self.normalize = normalize
-        self.w = w
 
         self.ins = np.empty(shape=(K+1,S), dtype=Instance)
         std_list = np.linspace(predictor_std_range[0], predictor_std_range[1], S)
         for s in np.arange(S):
             for k in np.arange(K+1):
-                self.ins[k,s] = Instance(B=self.B, predictor_std=std_list[s])
+                if k_dependant:
+                    predictor_std=std_list[s]*(K-k)/K
+                    self.ins[k, s] = Instance(B=self.B, predictor_std=predictor_std, time_dependant=time_dependant, time_dim_func=time_dim_func)
+                else:
+                    self.ins[k, s] = Instance(B=self.B,predictor_std=std_list[s], time_dependant=time_dependant, time_dim_func=time_dim_func)
