@@ -65,7 +65,7 @@ class MultiInstance:
     w = 0.1
 
     # K: overrides the upper bound of k in theorem 3, None will take the default value
-    # normalize: used to devide sol values by norm_factor
+    # normalize: used to divide sol values by norm_factor
     def __init__(self, K=10, B=50,  predictor_std=0, normalize = True, k_dependant = False, time_dependant = False, time_dim_func = "linear"):
         self.B = B
         self.normalize = normalize
